@@ -1,53 +1,152 @@
+ï»¿using UnityEngine;
+using TMPro;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class InputController : MonoBehaviour
 {
-    // ƒ[ƒ}š¨‚Ğ‚ç‚ª‚È‘Î‰•\
+    public TextMeshProUGUI displayText; // è¡¨ç¤ºã™ã‚‹UIï¼ˆã‚¤ãƒ³ã‚¹ãƒšã‚¯ã‚¿ãƒ¼ã§å‰²ã‚Šå½“ã¦ï¼‰
+
+    private string currentInput = "";   // å…¥åŠ›ä¸­ã®æ–‡å­—åˆ—ï¼ˆã¾ã å¤‰æ›ã•ã‚Œã¦ã„ãªã„éƒ¨åˆ†ï¼‰
+    private string convertedText = "";  // ç¢ºå®šã—ãŸã²ã‚‰ãŒãªéƒ¨åˆ†
+
+    // ãƒ­ãƒ¼ãƒå­—â†’ã²ã‚‰ãŒãªå¯¾å¿œè¡¨
     private Dictionary<string, string> romaToHira = new Dictionary<string, string>()
     {
-        // •ê‰¹
-        {"a","‚ "},{"i","‚¢"},{"u","‚¤"},{"e","‚¦"},{"o","‚¨"},
+        // æ¯éŸ³
+        {"a","ã‚"},{"i","ã„"},{"u","ã†"},{"e","ãˆ"},{"o","ãŠ"},
 
-        // s
-        {"ka","‚©"},{"ki","‚«"},{"ku","‚­"},{"ke","‚¯"},{"ko","‚±"},
-        {"sa","‚³"},{"shi","‚µ"},{"su","‚·"},{"se","‚¹"},{"so","‚»"},
-        {"ta","‚½"},{"chi","‚¿"},{"ti","‚¿"},{"tsu","‚Â"},{"tu","‚Â"},{"te","‚Ä"},{"to","‚Æ"},
-        {"na","‚È"},{"ni","‚É"},{"nu","‚Ê"},{"ne","‚Ë"},{"no","‚Ì"},
-        {"ha","‚Í"},{"hi","‚Ğ"},{"fu","‚Ó"},{"hu","‚Ó"},{"he","‚Ö"},{"ho","‚Ù"},
-        {"ma","‚Ü"},{"mi","‚İ"},{"mu","‚Ş"},{"me","‚ß"},{"mo","‚à"},
-        {"ya","‚â"},{"yu","‚ä"},{"yo","‚æ"},
-        {"ra","‚ç"},{"ri","‚è"},{"ru","‚é"},{"re","‚ê"},{"ro","‚ë"},
-        {"wa","‚í"},{"wo","‚ğ"},{"nn","‚ñ"},
+        // è¡Œ
+        {"ka","ã‹"},{"ki","ã"},{"ku","ã"},{"ke","ã‘"},{"ko","ã“"},
+        {"sa","ã•"},{"shi","ã—"},{"si","ã—"},{"su","ã™"},{"se","ã›"},{"so","ã"},
+        {"ta","ãŸ"},{"chi","ã¡"},{"ti","ã¡"},{"tsu","ã¤"},{"tu","ã¤"},{"te","ã¦"},{"to","ã¨"},
+        {"na","ãª"},{"ni","ã«"},{"nu","ã¬"},{"ne","ã­"},{"no","ã®"},
+        {"ha","ã¯"},{"hi","ã²"},{"fu","ãµ"},{"hu","ãµ"},{"he","ã¸"},{"ho","ã»"},
+        {"ma","ã¾"},{"mi","ã¿"},{"mu","ã‚€"},{"me","ã‚"},{"mo","ã‚‚"},
+        {"ya","ã‚„"},{"yu","ã‚†"},{"yo","ã‚ˆ"},
+        {"ra","ã‚‰"},{"ri","ã‚Š"},{"ru","ã‚‹"},{"re","ã‚Œ"},{"ro","ã‚"},
+        {"wa","ã‚"},{"wo","ã‚’"},
 
-        // ‘÷‰¹
-        {"ga","‚ª"},{"gi","‚¬"},{"gu","‚®"},{"ge","‚°"},{"go","‚²"},
-        {"za","‚´"},{"ji","‚¶"},{"zi","‚¶"},{"zu","‚¸"},{"ze","‚º"},{"zo","‚¼"},
-        {"da","‚¾"},{"di","‚À"},{"du","‚Ã"},{"de","‚Å"},{"do","‚Ç"},
-        {"ba","‚Î"},{"bi","‚Ñ"},{"bu","‚Ô"},{"be","‚×"},{"bo","‚Ú"},
+        // n
+        {"nn","ã‚“"},
 
-        // ”¼‘÷‰¹
-        {"pa","‚Ï"},{"pi","‚Ò"},{"pu","‚Õ"},{"pe","‚Ø"},{"po","‚Û"},
+        // æ¿éŸ³
+        {"ga","ãŒ"},{"gi","ã"},{"gu","ã"},{"ge","ã’"},{"go","ã”"},
+        {"za","ã–"},{"ji","ã˜"},{"zi","ã˜"},{"zu","ãš"},{"ze","ãœ"},{"zo","ã"},
+        {"da","ã "},{"di","ã¢"},{"du","ã¥"},{"de","ã§"},{"do","ã©"},
+        {"ba","ã°"},{"bi","ã³"},{"bu","ã¶"},{"be","ã¹"},{"bo","ã¼"},
 
-        // X‰¹
-        {"kya","‚«‚á"},{"kyu","‚«‚ã"},{"kyo","‚«‚å"},
-        {"sha","‚µ‚á"},{"shu","‚µ‚ã"},{"sho","‚µ‚å"},
-        {"cha","‚¿‚á"},{"chu","‚¿‚ã"},{"cho","‚¿‚å"},
-        {"nya","‚É‚á"},{"nyu","‚É‚ã"},{"nyo","‚É‚å"},
-        {"hya","‚Ğ‚á"},{"hyu","‚Ğ‚ã"},{"hyo","‚Ğ‚å"},
-        {"mya","‚İ‚á"},{"myu","‚İ‚ã"},{"myo","‚İ‚å"},
-        {"rya","‚è‚á"},{"ryu","‚è‚ã"},{"ryo","‚è‚å"},
-        {"gya","‚¬‚á"},{"gyu","‚¬‚ã"},{"gyo","‚¬‚å"},
-        {"ja","‚¶‚á"},{"ju","‚¶‚ã"},{"je","‚¶‚¥"},{"jo","‚¶‚å"},
-        {"bya","‚Ñ‚á"},{"byu","‚Ñ‚ã"},{"byo","‚Ñ‚å"},
-        {"pya","‚Ò‚á"},{"pyu","‚Ò‚ã"},{"pyo","‚Ò‚å"},
+        // åŠæ¿éŸ³
+        {"pa","ã±"},{"pi","ã´"},{"pu","ã·"},{"pe","ãº"},{"po","ã½"},
 
-        // ¬‚³‚¢•¶š (xa Œn)
-        {"xa","‚Ÿ"},{"xi","‚¡"},{"xu","‚£"},{"xe","‚¥"},{"xo","‚§"},
-        {"xya","‚á"},{"xyu","‚ã"},{"xyo","‚å"},{"xtu","‚Á"},
+        // æ‹—éŸ³
+        {"kya","ãã‚ƒ"},{"kyu","ãã‚…"},{"kyo","ãã‚‡"},
+        {"sha","ã—ã‚ƒ"},{"shu","ã—ã‚…"},{"sho","ã—ã‚‡"},{"sya","ã—ã‚ƒ"},{"syu","ã—ã‚…"},{"syo","ã—ã‚‡"},
+        {"cha","ã¡ã‚ƒ"},{"chu","ã¡ã‚…"},{"cho","ã¡ã‚‡"},{"tya","ã¡ã‚ƒ"},{"tyu","ã¡ã‚…"},{"tyo","ã¡ã‚‡"},
+        {"nya","ã«ã‚ƒ"},{"nyu","ã«ã‚…"},{"nyo","ã«ã‚‡"},
+        {"hya","ã²ã‚ƒ"},{"hyu","ã²ã‚…"},{"hyo","ã²ã‚‡"},
+        {"mya","ã¿ã‚ƒ"},{"myu","ã¿ã‚…"},{"myo","ã¿ã‚‡"},
+        {"rya","ã‚Šã‚ƒ"},{"ryu","ã‚Šã‚…"},{"ryo","ã‚Šã‚‡"},
+        {"gya","ãã‚ƒ"},{"gyu","ãã‚…"},{"gyo","ãã‚‡"},
+        {"ja","ã˜ã‚ƒ"},{"ju","ã˜ã‚…"},{"jo","ã˜ã‚‡"},{"jya","ã˜ã‚ƒ"},{"jyu","ã˜ã‚…"},{"jyo","ã˜ã‚‡"},
+        {"bya","ã³ã‚ƒ"},{"byu","ã³ã‚…"},{"byo","ã³ã‚‡"},
+        {"pya","ã´ã‚ƒ"},{"pyu","ã´ã‚…"},{"pyo","ã´ã‚‡"},
 
-        // ¬‚³‚¢•¶š (la Œn)
-        {"la","‚Ÿ"},{"li","‚¡"},{"lu","‚£"},{"le","‚¥"},{"lo","‚§"},
-        {"lya","‚á"},{"lyu","‚ã"},{"lyo","‚å"},{"ltu","‚Á"}
+        // å°ã•ã„æ–‡å­—ï¼ˆxç³»ï¼‰
+        {"xa","ã"},{"xi","ãƒ"},{"xu","ã…"},{"xe","ã‡"},{"xo","ã‰"},
+        {"xya","ã‚ƒ"},{"xyu","ã‚…"},{"xyo","ã‚‡"},{"xtu","ã£"},{"xwa","ã‚"},
+
+        // å°æ–‡å­—ï¼ˆlç³»ï¼‰
+        {"la","ã"},{"li","ãƒ"},{"lu","ã…"},{"le","ã‡"},{"lo","ã‰"},
+        {"lya","ã‚ƒ"},{"lyu","ã‚…"},{"lyo","ã‚‡"},
+
+        // vè¡Œ / fè¡Œï¼ˆå¤–æ¥èªç”¨ï¼‰
+        {"va","ã‚”ã"},{"vi","ã‚”ãƒ"},{"vu","ã‚”"},{"ve","ã‚”ã‡"},{"vo","ã‚”ã‰"},
+        {"fa","ãµã"},{"fi","ãµãƒ"},{"fe","ãµã‡"},{"fo","ãµã‰"},{"fyu","ãµã‚…"}
     };
+
+    void Update()
+    {
+        // Enterã‚­ãƒ¼ã§æ¶ˆå»
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+        {
+            currentInput = "";
+            convertedText = "";
+            displayText.text = "";
+            return; // å‡¦ç†çµ‚äº†
+        }
+
+        foreach (char c in Input.inputString)
+        {
+            if (c == '\b') // ãƒãƒƒã‚¯ã‚¹ãƒšãƒ¼ã‚¹
+            {
+                if (currentInput.Length > 0)
+                    currentInput = currentInput.Substring(0, currentInput.Length - 1);
+                else if (convertedText.Length > 0)
+                    convertedText = convertedText.Substring(0, convertedText.Length - 1);
+            }
+            else
+            {
+                currentInput += c; // å…¥åŠ›è¿½åŠ 
+            }
+
+            ConvertInput();
+        }
+
+        displayText.text = convertedText + currentInput; // è¡¨ç¤ºæ›´æ–°
+    }
+
+    void ConvertInput()
+    {
+        bool matched = true;
+
+        while (matched && currentInput.Length > 0)
+        {
+            matched = false;
+
+            // é•·ã„ã‚­ãƒ¼ã‹ã‚‰å„ªå…ˆçš„ã«ãƒã‚§ãƒƒã‚¯
+            foreach (var pair in romaToHira)
+            {
+                if (currentInput.StartsWith(pair.Key))
+                {
+                    convertedText += pair.Value;
+                    currentInput = currentInput.Substring(pair.Key.Length);
+                    matched = true;
+                    break;
+                }
+            }
+
+            // ä¿ƒéŸ³ï¼ˆä¾‹: "kk" â†’ "ã£k"ï¼‰
+            if (!matched && currentInput.Length >= 2 && currentInput[0] == currentInput[1])
+            {
+                if ("bcdfghjklmnpqrstvwxyz".Contains(currentInput[0].ToString()))
+                {
+                    convertedText += "ã£";
+                    currentInput = currentInput.Substring(1);
+                    matched = true;
+                    continue;
+                }
+            }
+
+            // nâ†’ã‚“ã®å‡¦ç†ï¼ˆnn ã¾ãŸã¯ n + éæ¯éŸ³ï¼‰
+            if (!matched && currentInput[0] == 'n')
+            {
+                if (currentInput.Length >= 2)
+                {
+                    char next = currentInput[1];
+                    if (next == 'n')
+                    {
+                        convertedText += "ã‚“";
+                        currentInput = currentInput.Substring(2);
+                        matched = true;
+                    }
+                    else if (!"aiueoy".Contains(next.ToString()))
+                    {
+                        convertedText += "ã‚“";
+                        currentInput = currentInput.Substring(1);
+                        matched = true;
+                    }
+                }
+            }
+        }
+    }
 }
