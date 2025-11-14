@@ -11,38 +11,23 @@ public class WallController : MonoBehaviour
     public int columns = 9;
 
     [Header("生成位置と間隔")]
-    public float startX = -8f;        // 横方向基準
-    public float startZ = 0f;         // Z方向基準（InvisibleWall より手前に設定）
-    public float xSpacing = 2f;       // 横列間隔
-    public float zSpacing = 2f;       // 縦列間隔
+    public float startX = -8f;
+    public float startZ = 0f;
+    public float xSpacing = 2f;
+    public float zSpacing = 2f;
 
     [Header("InvisibleWall (距離判定用)")]
-    public Transform invisibleWallTransform; // Inspectorで1つ設定
+    public Transform invisibleWallTransform;
 
     private List<AlphabetWall> allWalls = new List<AlphabetWall>();
 
     void Start()
     {
-        if (invisibleWallTransform == null)
-            Debug.LogWarning("InvisibleWall が設定されていません！");
-
         GenerateWalls();
     }
 
-    void Update()
-    {
-        // A-Zキー入力を確実に取得
-        for (KeyCode k = KeyCode.A; k <= KeyCode.Z; k++)
-        {
-            if (Input.GetKeyDown(k))
-            {
-                char pressed = k.ToString()[0];
-                DestroyClosestWall(pressed);
-            }
-        }
-    }
-
-    void DestroyClosestWall(char letter)
+    // ←★ 新規メソッド：Enter押下時に呼ばれる
+    public void DestroyWallByLetter(char letter)
     {
         AlphabetWall closestWall = null;
         float minZDiff = float.MaxValue;
@@ -51,7 +36,7 @@ public class WallController : MonoBehaviour
         {
             if (wall.AssignedLetter != letter) continue;
 
-            // InvisibleWall より手前（Z < InvisibleWall.Z）の壁のみ対象
+            // InvisibleWall より奥だけ破壊対象
             if (wall.transform.position.z <= invisibleWallTransform.position.z) continue;
 
             float zDiff = Mathf.Abs(wall.transform.position.z - invisibleWallTransform.position.z);
@@ -75,7 +60,6 @@ public class WallController : MonoBehaviour
         {
             for (int x = 0; x < columns; x++)
             {
-                // InvisibleWall の手前に生成（Z座標小さい側に配置）
                 Vector3 pos = new Vector3(
                     startX + x * xSpacing,
                     0f,
