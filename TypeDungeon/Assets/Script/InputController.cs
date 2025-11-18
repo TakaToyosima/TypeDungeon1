@@ -1,268 +1,252 @@
 ﻿using UnityEngine;
-
 using TMPro;
-
 using System.Collections.Generic;
 
 public class InputController : MonoBehaviour
-
 {
+    [Header("アルファベット入力欄（TextMeshPro）")]
+    public TMP_Text alphabetInputField;   // ← AlphInput
 
-    public TextMeshProUGUI displayText; // 表示するUI（インスペクターで割り当て）
+    [Header("ひらがな入力欄（TextMeshPro）")]
+    public TMP_Text hiraInputField;       // ← HiraInput
 
-    private string currentInput = "";   // 入力中の文字列（まだ変換されていない部分）
+    // 現在のアルファベットの入力（UI から取得）
+    public string CurrentWord => alphabetInputField.text;
 
-    private string convertedText = "";  // 確定したひらがな部分
+    // ローマ字変換用バッファ
+    private string currentInput = "";     // 未確定ローマ字
+    private string convertedText = "";    // 確定したひらがな
 
-    // ローマ字→ひらがな対応表
-
+    // ローマ字→ひらがな辞書（旧 InputController のまま）
     private Dictionary<string, string> romaToHira = new Dictionary<string, string>()
 {
     // あ行
-    {"A","あ"}, {"I","い"}, {"U","う"}, {"E","え"}, {"O","お"},
-    {"LA","ぁ"}, {"LI","ぃ"}, {"LU","ぅ"}, {"LE","ぇ"}, {"LO","ぉ"},
-    {"XA","ぁ"}, {"XI","ぃ"}, {"XU","ぅ"}, {"XE","ぇ"}, {"XO","ぉ"},
-    {"YE","いぇ"},
-    {"WHA","うぁ"}, {"WHI","うぃ"}, {"WHE","うぇ"}, {"WHO","うぉ"},
+    {"a","あ"}, {"i","い"}, {"u","う"}, {"e","え"}, {"o","お"},
+    {"la","ぁ"}, {"li","ぃ"}, {"lu","ぅ"}, {"le","ぇ"}, {"lo","ぉ"},
+    {"xa","ぁ"}, {"xi","ぃ"}, {"xu","ぅ"}, {"xe","ぇ"}, {"xo","ぉ"},
+    {"ye","いぇ"},
+    {"wha","うぁ"}, {"whi","うぃ"}, {"whe","うぇ"}, {"who","うぉ"},
 
     // か行
-    {"KA","か"}, {"KI","き"}, {"KU","く"}, {"KE","け"}, {"KO","こ"},
-    {"KYA","きゃ"}, {"KYI","きぃ"}, {"KYU","きゅ"}, {"KYE","きぇ"}, {"KYO","きょ"},
-    {"CA","か"}, {"CU","く"}, {"CO","こ"},
-    {"QU","く"}, {"QA","か"}, {"QI","き"}, {"QE","け"}, {"QO","こ"},
-    {"QYA","くゃ"}, {"QYU","くゅ"}, {"QYO","くょ"},
-    {"QWA","くぁ"}, {"QWI","くぃ"}, {"QWU","くぅ"}, {"QWE","くぇ"}, {"QWO","くぉ"},
+    {"ka","か"}, {"ki","き"}, {"ku","く"}, {"ke","け"}, {"ko","こ"},
+    {"kya","きゃ"}, {"kyi","きぃ"}, {"kyu","きゅ"}, {"kye","きぇ"}, {"kyo","きょ"},
+    {"ca","か"}, {"cu","く"}, {"co","こ"},
+    {"qu","く"}, {"qa","か"}, {"qi","き"}, {"qe","け"}, {"qo","こ"},
+    {"qya","くゃ"}, {"qyu","くゅ"}, {"qyo","くょ"},
+    {"qwa","くぁ"}, {"qwi","くぃ"}, {"qwu","くぅ"}, {"qwe","くぇ"}, {"qwo","くぉ"},
 
     // が行
-    {"GA","が"}, {"GI","ぎ"}, {"GU","ぐ"}, {"GE","げ"}, {"GO","ご"},
-    {"GYA","ぎゃ"}, {"GYI","ぎぃ"}, {"GYU","ぎゅ"}, {"GYE","ぎぇ"}, {"GYO","ぎょ"},
-    {"GWA","ぐぁ"}, {"GWI","ぐぃ"}, {"GWU","ぐぅ"}, {"GWE","ぐぇ"}, {"GWO","ぐぉ"},
+    {"ga","が"}, {"gi","ぎ"}, {"gu","ぐ"}, {"ge","げ"}, {"go","ご"},
+    {"gya","ぎゃ"}, {"gyi","ぎぃ"}, {"gyu","ぎゅ"}, {"gye","ぎぇ"}, {"gyo","ぎょ"},
+    {"gwa","ぐぁ"}, {"gwi","ぐぃ"}, {"gwu","ぐぅ"}, {"gwe","ぐぇ"}, {"gwo","ぐぉ"},
 
     // さ行
-    {"SA","さ"}, {"SI","し"}, {"SU","す"}, {"SE","せ"}, {"SO","そ"},
-    {"SYA","しゃ"}, {"SYI","しぃ"}, {"SYU","しゅ"}, {"SYE","しぇ"}, {"SYO","しょ"},
-    {"SHI","し"}, {"SHA","しゃ"}, {"SHU","しゅ"}, {"SHE","しぇ"}, {"SHO","しょ"},
+    {"sa","さ"}, {"si","し"}, {"su","す"}, {"se","せ"}, {"so","そ"},
+    {"sya","しゃ"}, {"syi","しぃ"}, {"syu","しゅ"}, {"sye","しぇ"}, {"syo","しょ"},
+    {"shi","し"}, {"sha","しゃ"}, {"shu","しゅ"}, {"she","しぇ"}, {"sho","しょ"},
 
     // ざ行
-    {"ZA","ざ"}, {"ZI","じ"}, {"ZU","ず"}, {"ZE","ぜ"}, {"ZO","ぞ"},
-    {"JA","じゃ"}, {"JI","じ"}, {"JU","じゅ"}, {"JE","じぇ"}, {"JO","じょ"},
-    {"ZYA","じゃ"}, {"ZYI","じぃ"}, {"ZYU","じゅ"}, {"ZYE","じぇ"}, {"ZYO","じょ"},
+    {"za","ざ"}, {"zi","じ"}, {"zu","ず"}, {"ze","ぜ"}, {"zo","ぞ"},
+    {"ja","じゃ"}, {"ji","じ"}, {"ju","じゅ"}, {"je","じぇ"}, {"jo","じょ"},
+    {"zya","じゃ"}, {"zyi","じぃ"}, {"zyu","じゅ"}, {"zye","じぇ"}, {"zyo","じょ"},
 
     // た行
-    {"TA","た"}, {"TI","ち"}, {"TU","つ"}, {"TE","て"}, {"TO","と"},
-    {"CHA","ちゃ"}, {"CHI","ち"}, {"CHU","ちゅ"}, {"CHE","ちぇ"}, {"CHO","ちょ"},
-    {"TYA","ちゃ"}, {"TYI","ちぃ"}, {"TYU","ちゅ"}, {"TYE","ちぇ"}, {"TYO","ちょ"},
-    {"TSA","つぁ"}, {"TSI","つぃ"}, {"TSU","つ"}, {"TSE","つぇ"}, {"TSO","つぉ"},
-    {"THA","てゃ"}, {"THI","てぃ"}, {"THU","てゅ"}, {"THE","てぇ"}, {"THO","てょ"},
-    {"TWA","とぁ"}, {"TWI","とぃ"}, {"TWU","とぅ"}, {"TWE","とぇ"}, {"TWO","とぉ"},
+    {"ta","た"}, {"ti","ち"}, {"tu","つ"}, {"te","て"}, {"to","と"},
+    {"cha","ちゃ"}, {"chi","ち"}, {"chu","ちゅ"}, {"che","ちぇ"}, {"cho","ちょ"},
+    {"tya","ちゃ"}, {"tyi","ちぃ"}, {"tyu","ちゅ"}, {"tye","ちぇ"}, {"tyo","ちょ"},
+    {"tsa","つぁ"}, {"tsi","つぃ"}, {"tsu","つ"}, {"tse","つぇ"}, {"tso","つぉ"},
+    {"tha","てゃ"}, {"thi","てぃ"}, {"thu","てゅ"}, {"the","てぇ"}, {"tho","てょ"},
+    {"twa","とぁ"}, {"twi","とぃ"}, {"twu","とぅ"}, {"twe","とぇ"}, {"two","とぉ"},
 
     // だ行
-    {"DA","だ"}, {"DI","ぢ"}, {"DU","づ"}, {"DE","で"}, {"DO","ど"},
-    {"DYA","ぢゃ"}, {"DYI","ぢぃ"}, {"DYU","ぢゅ"}, {"DYE","ぢぇ"}, {"DYO","ぢょ"},
-    {"DHA","でゃ"}, {"DHI","でぃ"}, {"DHU","でゅ"}, {"DHE","でぇ"}, {"DHO","でょ"},
-    {"DWA","どぁ"}, {"DWI","どぃ"}, {"DWU","どぅ"}, {"DWE","どぇ"}, {"DWO","どぉ"},
+    {"da","だ"}, {"di","ぢ"}, {"du","づ"}, {"de","で"}, {"do","ど"},
+    {"dya","ぢゃ"}, {"dyi","ぢぃ"}, {"dyu","ぢゅ"}, {"dye","ぢぇ"}, {"dyo","ぢょ"},
+    {"dha","でゃ"}, {"dhi","でぃ"}, {"dhu","でゅ"}, {"dhe","でぇ"}, {"dho","でょ"},
+    {"dwa","どぁ"}, {"dwi","どぃ"}, {"dwu","どぅ"}, {"dwe","どぇ"}, {"dwo","どぉ"},
 
     // な行
-    {"NA","な"}, {"NI","に"}, {"NU","ぬ"}, {"NE","ね"}, {"NO","の"},
-    {"NYA","にゃ"}, {"NYI","にぃ"}, {"NYU","にゅ"}, {"NYE","にぇ"}, {"NYO","にょ"},
+    {"na","な"}, {"ni","に"}, {"nu","ぬ"}, {"ne","ね"}, {"no","の"},
+    {"nya","にゃ"}, {"nyi","にぃ"}, {"nyu","にゅ"}, {"nye","にぇ"}, {"nyo","にょ"},
 
     // は行
-    {"HA","は"}, {"HI","ひ"}, {"HU","ふ"}, {"HE","へ"}, {"HO","ほ"},
-    {"HYA","ひゃ"}, {"HYI","ひぃ"}, {"HYU","ひゅ"}, {"HYE","ひぇ"}, {"HYO","ひょ"},
-    {"FYA","ふゃ"}, {"FYU","ふゅ"}, {"FYO","ふょ"},
-    {"FWA","ふぁ"}, {"FWI","ふぃ"}, {"FWU","ふぅ"}, {"FWE","ふぇ"}, {"FWO","ふぉ"},
-    {"FA","ふぁ"}, {"FI","ふぃ"}, {"FE","ふぇ"}, {"FO","ふぉ"},
-    
+    {"ha","は"}, {"hi","ひ"}, {"hu","ふ"}, {"he","へ"}, {"ho","ほ"},
+    {"hya","ひゃ"}, {"hyi","ひぃ"}, {"hyu","ひゅ"}, {"hye","ひぇ"}, {"hyo","ひょ"},
+    {"fya","ふゃ"}, {"fyu","ふゅ"}, {"fyo","ふょ"},
+    {"fwa","ふぁ"}, {"fwi","ふぃ"}, {"fwu","ふぅ"}, {"fwe","ふぇ"}, {"fwo","ふぉ"},
+    {"fa","ふぁ"}, {"fi","ふぃ"}, {"fe","ふぇ"}, {"fo","ふぉ"},
+
     // ば行
-    {"BA","ば"}, {"BI","び"}, {"BU","ぶ"}, {"BE","べ"}, {"BO","ぼ"},
-    {"BYA","びゃ"}, {"BYI","びぃ"}, {"BYU","びゅ"}, {"BYE","びぇ"}, {"BYO","びょ"},
+    {"ba","ば"}, {"bi","び"}, {"bu","ぶ"}, {"be","べ"}, {"bo","ぼ"},
+    {"bya","びゃ"}, {"byi","びぃ"}, {"byu","びゅ"}, {"bye","びぇ"}, {"byo","びょ"},
 
     // ぱ行
-    {"PA","ぱ"}, {"PI","ぴ"}, {"PU","ぷ"}, {"PE","ぺ"}, {"PO","ぽ"},
-    {"PYA","ぴゃ"}, {"PYI","ぴぃ"}, {"PYU","ぴゅ"}, {"PYE","ぴぇ"}, {"PYO","ぴょ"},
+    {"pa","ぱ"}, {"pi","ぴ"}, {"pu","ぷ"}, {"pe","ぺ"}, {"po","ぽ"},
+    {"pya","ぴゃ"}, {"pyi","ぴぃ"}, {"pyu","ぴゅ"}, {"pye","ぴぇ"}, {"pyo","ぴょ"},
 
     // ま行
-    {"MA","ま"}, {"MI","み"}, {"MU","む"}, {"ME","め"}, {"MO","も"},
-    {"MYA","みゃ"}, {"MYI","みぃ"}, {"MYU","みゅ"}, {"MYE","みぇ"}, {"MYO","みょ"},
+    {"ma","ま"}, {"mi","み"}, {"mu","む"}, {"me","め"}, {"mo","も"},
+    {"mya","みゃ"}, {"myi","みぃ"}, {"myu","みゅ"}, {"mye","みぇ"}, {"myo","みょ"},
 
     // や行
-    {"YA","や"}, {"YU","ゆ"}, {"YO","よ"},
-    {"LYA","ゃ"}, {"LYU","ゅ"}, {"LYO","ょ"},
-    {"XYA","ゃ"}, {"XYU","ゅ"}, {"XYO","ょ"},
+    {"ya","や"}, {"yu","ゆ"}, {"yo","よ"},
+    {"lya","ゃ"}, {"lyu","ゅ"}, {"lyo","ょ"},
+    {"xya","ゃ"}, {"xyu","ゅ"}, {"xyo","ょ"},
 
     // ら行
-    {"RA","ら"}, {"RI","り"}, {"RU","る"}, {"RE","れ"}, {"RO","ろ"},
-    {"RYA","りゃ"}, {"RYI","りぃ"}, {"RYU","りゅ"}, {"RYE","りぇ"}, {"RYO","りょ"},
+    {"ra","ら"}, {"ri","り"}, {"ru","る"}, {"re","れ"}, {"ro","ろ"},
+    {"rya","りゃ"}, {"ryi","りぃ"}, {"ryu","りゅ"}, {"rye","りぇ"}, {"ryo","りょ"},
 
     // わ行
-    {"WA","わ"}, {"WI","うぃ"}, {"WE","うぇ"}, {"WO","を"},
-    {"NN","ん"}, {"XN","ん"},
+    {"wa","わ"}, {"wi","うぃ"}, {"we","うぇ"}, {"wo","を"},
+    {"nn","ん"}, {"xn","ん"},
 
     // ヴ行
-    {"VA","ゔぁ"}, {"VI","ゔぃ"}, {"VU","ゔ"}, {"VE","ゔぇ"}, {"VO","ゔぉ"},
-    {"VYA","ゔゃ"}, {"VYI","ゔぃ"}, {"VYU","ゔゅ"}, {"VYE","ゔぇ"}, {"VYO","ゔょ"},
-
-    // 促音（っ）— 子音2回
-    // → 実際の処理はコード側でやるので辞書には入れない
+    {"va","ゔぁ"}, {"vi","ゔぃ"}, {"vu","ゔ"}, {"ve","ゔぇ"}, {"vo","ゔぉ"},
+    {"vya","ゔゃ"}, {"vyi","ゔぃ"}, {"vyu","ゔゅ"}, {"vye","ゔぇ"}, {"vyo","ゔょ"},
 
     // 伸ばし棒
     {"-","ー"},
-};
+    };
 
 
     void Update()
-
     {
-
-        // Enterキーで消去
-
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-
-        {
-
-            currentInput = "";
-
-            convertedText = "";
-
-            displayText.text = "";
-
-            return; // 処理終了
-
-        }
-
-        foreach (char c in Input.inputString)
-
-        {
-
-            if (c == '\b') // バックスペース
-
-            {
-
-                if (currentInput.Length > 0)
-
-                    currentInput = currentInput.Substring(0, currentInput.Length - 1);
-
-                else if (convertedText.Length > 0)
-
-                    convertedText = convertedText.Substring(0, convertedText.Length - 1);
-
-            }
-
-            else
-
-            {
-
-                currentInput += c; // 入力追加
-
-            }
-
-            ConvertInput();
-
-        }
-
-        displayText.text = convertedText + currentInput; // 表示更新
-
+        HandleAlphabetInput();   // アルファベット入力処理
+        UpdateHiragana();        // ひらがな変換処理
     }
 
-    void ConvertInput()
-
+    // -------------------------------------------------------
+    // アルファベット入力処理
+    // -------------------------------------------------------
+    private void HandleAlphabetInput()
     {
+        // A〜Z 入力
+        for (KeyCode k = KeyCode.A; k <= KeyCode.Z; k++)
+        {
+            if (Input.GetKeyDown(k))
+            {
+                char c = k.ToString()[0];
+                alphabetInputField.text += c;
+            }
+        }
 
+        // Backspace
+        if (Input.GetKeyDown(KeyCode.Backspace))
+        {
+            if (hiraToRomaHistory.Count > 0)
+            {
+                // 最後のひらがな1文字に対応するローマ字を取得
+                string lastRoma = hiraToRomaHistory[hiraToRomaHistory.Count - 1];
+                hiraToRomaHistory.RemoveAt(hiraToRomaHistory.Count - 1);
+
+                // AlphInput（ローマ字表示）からローマ字分削除
+                if (alphabetInputField.text.Length >= lastRoma.Length)
+                {
+                    alphabetInputField.text =
+                        alphabetInputField.text.Substring(0, alphabetInputField.text.Length - lastRoma.Length);
+                }
+
+                // HiraInput（ひらがな表示）から1文字削除
+                if (hiraInputField.text.Length > 0)
+                {
+                    hiraInputField.text =
+                        hiraInputField.text.Substring(0, hiraInputField.text.Length - 1);
+                }
+
+                return; // ★通常処理へ行かない
+            }
+        }
+    }
+
+
+    // -------------------------------------------------------
+    // ローマ字 → ひらがな変換処理（旧 InputController のまま）
+    // -------------------------------------------------------
+    private void UpdateHiragana()
+    {
+        string newInput = CurrentWord.ToLower();  // ひらがな変換用に小文字化
+
+        // 前回の構造を維持するためクリアして入れ直す
+        currentInput = newInput;
+        convertedText = "";
+
+        ConvertInput();
+
+        if (hiraInputField != null)
+            hiraInputField.text = convertedText + currentInput;
+    }
+
+    private void ConvertInput()
+    {
         bool matched = true;
 
         while (matched && currentInput.Length > 0)
-
         {
-
             matched = false;
 
-            // 長いキーから優先的にチェック
-
+            // 長いキーから優先してチェック
             foreach (var pair in romaToHira)
-
             {
-
                 if (currentInput.StartsWith(pair.Key))
-
                 {
-
                     convertedText += pair.Value;
 
+                    // ★ここ！！ 追加：ひらがな1文字のために使ったローマ字を記録
+                    hiraToRomaHistory.Add(pair.Key);
+
                     currentInput = currentInput.Substring(pair.Key.Length);
-
                     matched = true;
-
                     break;
-
                 }
-
             }
 
-            // 促音（例: "kk" → "っk"）
 
-            if (!matched && currentInput.Length >= 2 && currentInput[0] == currentInput[1])
-
+            // 促音判定（kk → っk）
+            if (!matched && currentInput.Length >= 2 &&
+                currentInput[0] == currentInput[1] &&
+                "bcdfghjklmnpqrstvwxyz".Contains(currentInput[0].ToString()))
             {
-
-                if ("bcdfghjklmnpqrstvwxyz".Contains(currentInput[0].ToString()))
-
-                {
-
-                    convertedText += "っ";
-
-                    currentInput = currentInput.Substring(1);
-
-                    matched = true;
-
-                    continue;
-
-                }
-
+                convertedText += "っ";
+                currentInput = currentInput.Substring(1);
+                matched = true;
+                continue;
             }
 
-            // n→んの処理（nn または n + 非母音）
-
+            // n → ん 処理
             if (!matched && currentInput[0] == 'n')
-
             {
-
                 if (currentInput.Length >= 2)
-
                 {
-
                     char next = currentInput[1];
-
                     if (next == 'n')
-
                     {
-
                         convertedText += "ん";
-
                         currentInput = currentInput.Substring(2);
-
                         matched = true;
-
                     }
-
                     else if (!"aiueoy".Contains(next.ToString()))
-
                     {
-
                         convertedText += "ん";
-
                         currentInput = currentInput.Substring(1);
-
                         matched = true;
-
                     }
-
                 }
-
             }
-
         }
-
     }
 
-}
+    /// <summary>
+    /// WordChecker などが使えるように入力リセット
+    /// </summary>
+    public void ClearInput()
+    {
+        alphabetInputField.text = "";
+        hiraInputField.text = "";
+        currentInput = "";
+        convertedText = "";
+    }
 
+    // ひらがなの1文字に対応するローマ字を記録するリスト
+    private List<string> hiraToRomaHistory = new List<string>();
+
+}

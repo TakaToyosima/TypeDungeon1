@@ -23,23 +23,73 @@ public class WallController : MonoBehaviour
 
     void Start()
     {
+        if (invisibleWallTransform == null)
+            Debug.LogWarning("InvisibleWall が設定されていません！");
+
         GenerateWalls();
     }
 
-    // ←★ 新規メソッド：Enter押下時に呼ばれる
+    // -----------------------
+    // 互換用公文 API
+    // -----------------------
+
+    /// <summary>
+    /// 互換用：1文字分の壁を破壊する public メソッド（呼び出し元がこの名前を期待している場合用）
+    /// </summary>
     public void DestroyWallByLetter(char letter)
     {
+        DestroyClosestWall(letter);
+    }
+
+    /// <summary>
+    /// 文字列を受け取って全ての文字について破壊処理を呼ぶ
+    /// </summary>
+    public void DestroyByString(string letters)
+    {
+        if (string.IsNullOrEmpty(letters)) return;
+
+        foreach (char c in letters)
+        {
+            if (!char.IsLetter(c)) continue;
+            DestroyClosestWall(c);
+        }
+    }
+
+    // -----------------------
+    // 内部処理
+    // -----------------------
+
+    /// <summary>
+    /// 指定文字に一致する壁のうち、InvisibleWall に一番近いものを1つ破壊する
+    /// </summary>
+    void DestroyClosestWall(char letter)
+    {
+        // 正常化（大文字で比較）
+        char target = char.ToUpper(letter);
+
+        // クリーンアップ：null な参照を除去（他所で Destroy されている可能性）
+        allWalls.RemoveAll(w => w == null);
+
         AlphabetWall closestWall = null;
         float minZDiff = float.MaxValue;
 
         foreach (var wall in allWalls)
         {
-            if (wall.AssignedLetter != letter) continue;
+            if (wall == null) continue;
 
-            // InvisibleWall より奥だけ破壊対象
-            if (wall.transform.position.z <= invisibleWallTransform.position.z) continue;
+            // AssignedLetter が char 型なので大文字比較
+            if (char.ToUpper(wall.AssignedLetter) != target) continue;
 
-            float zDiff = Mathf.Abs(wall.transform.position.z - invisibleWallTransform.position.z);
+            // InvisibleWall より手前（手前＝z > invisibleZ の設計だった場合は条件を反転してください）
+            if (invisibleWallTransform != null)
+            {
+                if (wall.transform.position.z <= invisibleWallTransform.position.z) continue;
+            }
+
+            float zDiff = invisibleWallTransform != null
+                ? Mathf.Abs(wall.transform.position.z - invisibleWallTransform.position.z)
+                : Mathf.Abs(wall.transform.position.z); // invisible 指定がなければ単純な絶対値
+
             if (zDiff < minZDiff)
             {
                 minZDiff = zDiff;
@@ -68,7 +118,8 @@ public class WallController : MonoBehaviour
 
                 GameObject wall = Instantiate(wallPrefab, pos, Quaternion.identity);
                 AlphabetWall wallScript = wall.GetComponent<AlphabetWall>();
-                allWalls.Add(wallScript);
+                if (wallScript != null) allWalls.Add(wallScript);
+                else Debug.LogWarning("WallController: instantiated prefab has no AlphabetWall component.");
             }
         }
     }

@@ -781,7 +781,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: "\u3072\u3089\u304C\u306A\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4339f73b645436d449cbd2700a17f3f0, type: 2}
   m_sharedMaterial: {fileID: -4343260728057594284, guid: 4339f73b645436d449cbd2700a17f3f0, type: 2}
@@ -1397,8 +1397,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sourceText: {fileID: 622939685}
-  inputController: {fileID: 0}
-  wallController: {fileID: 0}
+  inputController: {fileID: 1481174539}
+  wallController: {fileID: 171331430}
   onValid:
     m_PersistentCalls:
       m_Calls: []
@@ -1806,7 +1806,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34098027876bdc348a30215a835c10eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  displayText: {fileID: 622939685}
+  alphabetInputField: {fileID: 1688692161}
+  hiraInputField: {fileID: 622939685}
 --- !u!1 &1567483919
 GameObject:
   m_ObjectHideFlags: 0
@@ -2007,7 +2008,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: Alphabet
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4339f73b645436d449cbd2700a17f3f0, type: 2}
   m_sharedMaterial: {fileID: -4343260728057594284, guid: 4339f73b645436d449cbd2700a17f3f0, type: 2}
@@ -2131,6 +2132,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   displayText: {fileID: 1688692161}
+  wallController: {fileID: 171331430}
 --- !u!4 &983510027566710995
 Transform:
   m_ObjectHideFlags: 0
