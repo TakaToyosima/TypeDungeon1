@@ -104,8 +104,7 @@ public class InputController : MonoBehaviour
     {"va","ゔぁ"}, {"vi","ゔぃ"}, {"vu","ゔ"}, {"ve","ゔぇ"}, {"vo","ゔぉ"},
     {"vya","ゔゃ"}, {"vyi","ゔぃ"}, {"vyu","ゔゅ"}, {"vye","ゔぇ"}, {"vyo","ゔょ"},
 
-    // 伸ばし棒
-    {"-","ー"},
+    
     };
 
 
@@ -125,8 +124,7 @@ public class InputController : MonoBehaviour
         {
             if (Input.GetKeyDown(k))
             {
-                char c = k.ToString()[0];
-                alphabetInputField.text += c;
+                alphabetInputField.text += k.ToString().ToLower();
             }
         }
 
@@ -135,28 +133,28 @@ public class InputController : MonoBehaviour
         {
             if (hiraToRomaHistory.Count > 0)
             {
-                // 最後のひらがな1文字に対応するローマ字を取得
                 string lastRoma = hiraToRomaHistory[hiraToRomaHistory.Count - 1];
                 hiraToRomaHistory.RemoveAt(hiraToRomaHistory.Count - 1);
 
-                // AlphInput（ローマ字表示）からローマ字分削除
+                // ローマ字削除
                 if (alphabetInputField.text.Length >= lastRoma.Length)
                 {
                     alphabetInputField.text =
                         alphabetInputField.text.Substring(0, alphabetInputField.text.Length - lastRoma.Length);
                 }
 
-                // HiraInput（ひらがな表示）から1文字削除
+                // ひらがな削除
                 if (hiraInputField.text.Length > 0)
                 {
                     hiraInputField.text =
                         hiraInputField.text.Substring(0, hiraInputField.text.Length - 1);
                 }
 
-                return; // ★通常処理へ行かない
+                return;
             }
         }
     }
+
 
 
     // -------------------------------------------------------
