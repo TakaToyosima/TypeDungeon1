@@ -306,6 +306,33 @@ MonoBehaviour:
   xSpacing: 2
   zSpacing: 3
   invisibleWallTransform: {fileID: 983510027566710995}
+  letterWeights:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -2133,6 +2160,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayText: {fileID: 1688692161}
   wallController: {fileID: 171331430}
+  areaWallTransform: {fileID: 813413807}
 --- !u!4 &983510027566710995
 Transform:
   m_ObjectHideFlags: 0

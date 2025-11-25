@@ -1,27 +1,33 @@
 using UnityEngine;
 
-[RequireComponent(typeof(BoxCollider))] // Collider•K{
+
+[RequireComponent(typeof(BoxCollider))]
 public class AlphabetWall : MonoBehaviour
 {
     public float moveSpeed = 5f;
     private AlphabetUI alphabetUI;
 
+
     public char AssignedLetter { get; private set; }
 
-    void Start()
+
+    public void SetLetter(char c)
     {
-        int ascii = Random.Range(65, 91); // A-Z
-        AssignedLetter = (char)ascii;
+        AssignedLetter = c;
+        if (alphabetUI != null) alphabetUI.SetLetter(c);
+    }
 
+
+    void Awake()
+    {
         alphabetUI = GetComponentInChildren<AlphabetUI>();
-        if (alphabetUI != null)
-            alphabetUI.SetLetter(AssignedLetter);
 
-        // Collider‚ªTrigger‚Å‚È‚¢ê‡‚Íİ’è
+
         BoxCollider bc = GetComponent<BoxCollider>();
         if (bc != null && !bc.isTrigger)
             bc.isTrigger = true;
     }
+
 
     void Update()
     {

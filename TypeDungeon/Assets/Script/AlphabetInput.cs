@@ -1,51 +1,68 @@
 using UnityEngine;
 using TMPro;
 
+
 public class AlphabetInput : MonoBehaviour
 {
     [Header("入力表示用テキスト (TextMeshPro)")]
     public TextMeshProUGUI displayText;
 
-    [Header("壁制御")]
-    public WallController wallController;   // ★追加：WallController への参照
 
-    private string currentInput = "";   // 入力中のアルファベット
+    [Header("壁制御")]
+    public WallController wallController;
+
+
+    [Header("AreaWall（入力許可の基準位置）")]
+    public Transform areaWallTransform;
+
+
+    private string currentInput = "";
+
 
     void Update()
     {
         foreach (char c in Input.inputString)
         {
-            // バックスペース
             if (c == '\b')
             {
                 if (currentInput.Length > 0)
-                    currentInput = currentInput.Substring(0, currentInput.Length - 1);
+                    currentInput = currentInput[..^1];
             }
-            // エンター
             else if (c == '\n' || c == '\r')
             {
-                if (!string.IsNullOrEmpty(currentInput))
-                {
-                    // ★ 入力されている全文字を WallController へ渡す
-                    wallController.DestroyByString(currentInput);
-                }
-
-                currentInput = ""; // 入力消去
+                wallController.DestroyByString(currentInput);
+                currentInput = "";
             }
-            // アルファベットのみ受け付け（大文字化）
             else if (char.IsLetter(c))
             {
-                currentInput += char.ToUpper(c);
+                char up = char.ToUpper(c);
+                if (IsLetterAllowed(up)) currentInput += up;
             }
         }
 
-        if (displayText != null)
-            displayText.text = currentInput;
+
+        if (displayText != null) displayText.text = currentInput;
     }
 
-    // ★ 外部が現在の入力文字列を取得したい時用
-    public string GetCurrentInput()
+
+    bool IsLetterAllowed(char letter)
     {
-        return currentInput;
+        GameObject[] walls = GameObject.FindGameObjectsWithTag("AlphaWall");
+
+
+        foreach (var w in walls)
+        {
+            AlphabetWall aw = w.GetComponent<AlphabetWall>();
+            if (aw == null) continue;
+            if (char.ToUpper(aw.AssignedLetter) != letter) continue;
+
+
+            if (aw.transform.position.z < areaWallTransform.position.z)
+                return true;
+        }
+        return false;
     }
+
+
+    public string GetCurrentInput() => currentInput;
 }

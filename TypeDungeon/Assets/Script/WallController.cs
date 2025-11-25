@@ -1,109 +1,127 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections.Generic;
+
 
 public class WallController : MonoBehaviour
 {
-    [Header("•ÇƒvƒŒƒnƒu")]
+    [Header("å£ãƒ—ãƒ¬ãƒãƒ–")]
     public GameObject wallPrefab;
 
-    [Header("¶¬—ñ”")]
+
+    [Header("ç”Ÿæˆåˆ—æ•°")]
     public int rows = 5;
     public int columns = 9;
 
-    [Header("¶¬ˆÊ’u‚ÆŠÔŠu")]
+
+    [Header("ç”Ÿæˆä½ç½®ã¨é–“éš”")]
     public float startX = -8f;
     public float startZ = 0f;
     public float xSpacing = 2f;
     public float zSpacing = 2f;
 
-    [Header("InvisibleWall (‹——£”»’è—p)")]
+
+    [Header("InvisibleWall (è·é›¢åˆ¤å®šç”¨)")]
     public Transform invisibleWallTransform;
+
+
+    [Header("å‡ºç¾ç¢ºç‡ï¼ˆAã€œZ ã® 26 è¦ç´ ï¼‰")]
+    public List<float> letterWeights = new List<float>(new float[26]);
+
+    //[Header("å‡ºç¾ç¢ºç‡ï¼ˆAã€œZï¼‰")]
+    //public WeightTable weightTable;
+
 
     private List<AlphabetWall> allWalls = new List<AlphabetWall>();
 
+
     void Start()
     {
-        if (invisibleWallTransform == null)
-            Debug.LogWarning("InvisibleWall ‚ªİ’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñI");
+        if (letterWeights.Count != 26)
+        {
+            letterWeights = new List<float>(new float[26]);
+            for (int i = 0; i < 26; i++) letterWeights[i] = 1f;
+        }
+
 
         GenerateWalls();
     }
 
-    // -----------------------
-    // ŒİŠ·—pŒö•¶ API
-    // -----------------------
 
-    /// <summary>
-    /// ŒİŠ·—pF1•¶š•ª‚Ì•Ç‚ğ”j‰ó‚·‚é public ƒƒ\ƒbƒhiŒÄ‚Ño‚µŒ³‚ª‚±‚Ì–¼‘O‚ğŠú‘Ò‚µ‚Ä‚¢‚éê‡—pj
-    /// </summary>
+    // -----------------------
+    // Public API
+    // -----------------------
     public void DestroyWallByLetter(char letter)
     {
         DestroyClosestWall(letter);
     }
 
-    /// <summary>
-    /// •¶š—ñ‚ğó‚¯æ‚Á‚Ä‘S‚Ä‚Ì•¶š‚É‚Â‚¢‚Ä”j‰óˆ—‚ğŒÄ‚Ô
-    /// </summary>
+
     public void DestroyByString(string letters)
     {
         if (string.IsNullOrEmpty(letters)) return;
-
         foreach (char c in letters)
         {
-            if (!char.IsLetter(c)) continue;
-            DestroyClosestWall(c);
+            if (char.IsLetter(c)) DestroyClosestWall(c);
         }
     }
 
-    // -----------------------
-    // “à•”ˆ—
-    // -----------------------
 
-    /// <summary>
-    /// w’è•¶š‚Éˆê’v‚·‚é•Ç‚Ì‚¤‚¿AInvisibleWall ‚Éˆê”Ô‹ß‚¢‚à‚Ì‚ğ1‚Â”j‰ó‚·‚é
-    /// </summary>
+    // -----------------------
+    // Weighted Random Letter
+    // -----------------------
+    char GetWeightedRandomLetter()
+    {
+        float total = 0f;
+        for (int i = 0; i < 26; i++) total += letterWeights[i];
+        float r = Random.Range(0f, total);
+
+
+        for (int i = 0; i < 26; i++)
+        {
+            if (r < letterWeights[i]) return (char)('A' + i);
+            r -= letterWeights[i];
+        }
+        return 'A';
+    }
+
+    // -----------------------
+    // DestroyClosestWall
+    // -----------------------
     void DestroyClosestWall(char letter)
     {
-        // ³í‰»i‘å•¶š‚Å”äŠrj
         char target = char.ToUpper(letter);
 
-        // ƒNƒŠ[ƒ“ƒAƒbƒvFnull ‚ÈQÆ‚ğœ‹i‘¼Š‚Å Destroy ‚³‚ê‚Ä‚¢‚é‰Â”\«j
+
         allWalls.RemoveAll(w => w == null);
 
-        AlphabetWall closestWall = null;
-        float minZDiff = float.MaxValue;
+
+        AlphabetWall closest = null;
+        float minDist = float.MaxValue;
+
 
         foreach (var wall in allWalls)
         {
             if (wall == null) continue;
-
-            // AssignedLetter ‚ª char Œ^‚È‚Ì‚Å‘å•¶š”äŠr
             if (char.ToUpper(wall.AssignedLetter) != target) continue;
 
-            // InvisibleWall ‚æ‚èè‘Oiè‘Oz > invisibleZ ‚ÌİŒv‚¾‚Á‚½ê‡‚ÍğŒ‚ğ”½“]‚µ‚Ä‚­‚¾‚³‚¢j
-            if (invisibleWallTransform != null)
-            {
-                if (wall.transform.position.z <= invisibleWallTransform.position.z) continue;
-            }
 
-            float zDiff = invisibleWallTransform != null
-                ? Mathf.Abs(wall.transform.position.z - invisibleWallTransform.position.z)
-                : Mathf.Abs(wall.transform.position.z); // invisible w’è‚ª‚È‚¯‚ê‚Î’Pƒ‚Èâ‘Î’l
-
-            if (zDiff < minZDiff)
+            float dist = Mathf.Abs(wall.transform.position.z - invisibleWallTransform.position.z);
+            if (dist < minDist)
             {
-                minZDiff = zDiff;
-                closestWall = wall;
+                minDist = dist;
+                closest = wall;
             }
         }
 
-        if (closestWall != null)
+
+        if (closest != null)
         {
-            allWalls.Remove(closestWall);
-            Destroy(closestWall.gameObject);
+            allWalls.Remove(closest);
+            Destroy(closest.gameObject);
         }
-    }
-
+    }// -----------------------
+     // GenerateWalls
+     // -----------------------
     void GenerateWalls()
     {
         for (int z = 0; z < rows; z++)
@@ -111,15 +129,22 @@ public class WallController : MonoBehaviour
             for (int x = 0; x < columns; x++)
             {
                 Vector3 pos = new Vector3(
-                    startX + x * xSpacing,
-                    0f,
-                    startZ + z * zSpacing
+                startX + x * xSpacing,
+                0f,
+                startZ + z * zSpacing
                 );
 
-                GameObject wall = Instantiate(wallPrefab, pos, Quaternion.identity);
-                AlphabetWall wallScript = wall.GetComponent<AlphabetWall>();
-                if (wallScript != null) allWalls.Add(wallScript);
-                else Debug.LogWarning("WallController: instantiated prefab has no AlphabetWall component.");
+
+                GameObject wallObj = Instantiate(wallPrefab, pos, Quaternion.identity);
+                AlphabetWall wall = wallObj.GetComponent<AlphabetWall>();
+
+
+                if (wall != null)
+                {
+                    char letter = GetWeightedRandomLetter();
+                    wall.SetLetter(letter);
+                    allWalls.Add(wall);
+                }
             }
         }
     }
