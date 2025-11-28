@@ -1,47 +1,64 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-[RequireComponent(typeof(CharacterController))]
 public class Player : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    private CharacterController controller;
+    [Header("レーンの位置（9個）")]
+    public Transform[] lanePositions;
 
-    void Start()
-    {
-        controller = GetComponent<CharacterController>();
-        CheckCollision();
-    }
+    [Header("移動速度")]
+    public float moveSpeed = 10f; // レーン移動の速さ
+
+    private int currentLane = 4; // 0～8の 9レーン。中央は4
 
     void Update()
     {
-        float moveX = 0f;
-        float moveZ = 0f;
-
-        if (Input.GetKey(KeyCode.UpArrow)) moveZ = 1f;
-        if (Input.GetKey(KeyCode.DownArrow)) moveZ = -1f;
-        if (Input.GetKey(KeyCode.LeftArrow)) moveX = -1f;
-        if (Input.GetKey(KeyCode.RightArrow)) moveX = 1f;
-
-        Vector3 move = new Vector3(moveX, 0f, moveZ).normalized;
-        controller.Move(move * moveSpeed * Time.deltaTime);
-
-        CheckCollision();
+        HandleLaneInput();
+        MoveToLane();
     }
 
-    void CheckCollision()
+    /// <summary>
+    /// 左右キー入力でレーン番号を変更
+    /// </summary>
+    private void HandleLaneInput()
     {
-        Vector3 center = controller.bounds.center;
-        Vector3 halfExtents = controller.bounds.extents;
-
-        Collider[] hits = Physics.OverlapBox(center, halfExtents, Quaternion.identity);
-        foreach (var hit in hits)
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
-            if (hit.CompareTag("AlphaWall"))
-            {
-                SceneManager.LoadScene("GameOver");
-                return;
-            }
+            currentLane = Mathf.Max(currentLane - 1, 0);
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            currentLane = Mathf.Min(currentLane + 1, lanePositions.Length - 1);
+        }
+    }
+
+    /// <summary>
+    /// 対象レーンの位置へスムーズに移動（Xのみ）
+    /// </summary>
+    private void MoveToLane()
+    {
+        if (lanePositions == null || lanePositions.Length == 0) return;
+
+        Vector3 targetPos = new Vector3(
+            lanePositions[currentLane].position.x,
+            transform.position.y,
+            transform.position.z
+        );
+
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            targetPos,
+            moveSpeed * Time.deltaTime
+        );
+    }
+
+    /// <summary>
+    /// 壁衝突でゲームオーバー
+    /// </summary>
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Wall"))
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("GameOver");
         }
     }
 }
