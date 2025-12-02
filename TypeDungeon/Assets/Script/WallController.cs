@@ -27,11 +27,49 @@ public class WallController : MonoBehaviour
     [Header("出現確率（A〜Z の 26 要素）")]
     public List<float> letterWeights = new List<float>(new float[26]);
 
+   
+    public static WallController Instance;
+
+
+    public List<AlphabetWall> walls = new List<AlphabetWall>();
+
+
+    private AlphabetWall currentHighlightedWall = null;
+
     //[Header("出現確率（A〜Z）")]
     //public WeightTable weightTable;
 
 
     private List<AlphabetWall> allWalls = new List<AlphabetWall>();
+
+    void Awake()
+    {
+        Instance = this;
+    }
+
+
+    public void HighlightWallByChar(char c)
+    {
+        // すでに光ってる壁をリセット
+        if (currentHighlightedWall != null)
+            currentHighlightedWall.Highlight(false);
+
+
+        // 対応する壁を検索
+        char upper = char.ToUpper(c);
+        AlphabetWall target = walls.Find(w => w.letter == upper);
+
+
+        if (target != null)
+        {
+            target.Highlight(true);
+            currentHighlightedWall = target;
+        }
+        else
+        {
+            currentHighlightedWall = null;
+        }
+    }
 
 
     void Start()

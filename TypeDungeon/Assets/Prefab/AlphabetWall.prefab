@@ -215,7 +215,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9510330d29d36a84fb1190db776d5918, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 0.5
+  moveSpeed: 0.2
+  letter: 0
+  normalColor: {r: 0, g: 0, b: 0, a: 1}
+  highlightColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!54 &-176378902910941080
 Rigidbody:
   m_ObjectHideFlags: 0

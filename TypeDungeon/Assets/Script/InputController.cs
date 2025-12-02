@@ -112,6 +112,17 @@ public class InputController : MonoBehaviour
     {
         HandleAlphabetInput();   // アルファベット入力処理
         UpdateHiragana();        // ひらがな変換処理
+
+        if (Input.anyKeyDown)
+        {
+            foreach (char c in Input.inputString)
+            {
+                if (char.IsLetter(c))
+                {
+                    WallController.Instance.HighlightWallByChar(c);
+                }
+            }
+        }
     }
 
     // -------------------------------------------------------
