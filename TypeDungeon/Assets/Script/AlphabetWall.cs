@@ -40,9 +40,14 @@ public class AlphabetWall : MonoBehaviour
         if (bc != null && !bc.isTrigger)
             bc.isTrigger = true;
 
-        mr = GetComponent<MeshRenderer>();
-        if (mr != null && mr.material != null)
+        mr = GetComponentInChildren<MeshRenderer>();
+
+        if (mr != null)
         {
+            // マテリアルのインスタンス化
+            mr.material = new Material(mr.material);
+
+            // 初期色設定
             mr.material.color = normalColor;
         }
     }
@@ -55,7 +60,7 @@ public class AlphabetWall : MonoBehaviour
 
     public void Highlight(bool enable)
     {
-        if (mr != null && mr.material != null)
+        if (mr != null)
         {
             mr.material.color = enable ? highlightColor : normalColor;
         }
