@@ -343,7 +343,7 @@ MonoBehaviour:
   - 1
   - 1
   - 1.5
-  - 0.5
+  - 0
   - 1
   - 1
   - 1.5
@@ -353,13 +353,13 @@ MonoBehaviour:
   - 1
   - 1
   - 1.5
-  - 0.5
-  - 0.5
+  - 0
+  - 1
   - 1
   - 1
   - 1
   - 1.5
-  - 0.5
+  - 0
   - 1
   - 0.5
   - 1
@@ -1551,6 +1551,7 @@ MonoBehaviour:
   sourceText: {fileID: 622939685}
   inputController: {fileID: 1481174539}
   wallController: {fileID: 171331430}
+  dictionaryFile: {fileID: 4900000, guid: e1386ed2aa971814cb009fe125a43d13, type: 3}
   onValid:
     m_PersistentCalls:
       m_Calls: []
